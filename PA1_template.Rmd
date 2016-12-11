@@ -1,25 +1,114 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+#Coursera Reproducible research Peer assisment assignment 1: 
+
+##code for reading the dataset and processing the same. 
+1. Reading the data
+```{r echo=TRUE}
+data<- read.csv("activity.csv")
+data$date<- as.Date(as.character(data$date))
+```
+2.removing the data containing NA
+```{r echo = TRUE}
+data_nona<-data[!is.na(data),]
+```
+
+##Histogram of the total number of steps taken each day
+1. calculating the sum of the steps per day
+```{r echo=TRUE,warnings=FALSE}
+library(dplyr)
+d<- tbl_df(data_nona)
+day_hist<-group_by(d,date)
+day_total_hist<-summarize(day_hist,sum(steps))
+names(day_total_hist)<-c('dates','total_steps_taken')
+hist(day_total_hist$total_steps_taken,main = 'Histogram of total steps taken per day',xlab = 'Total Steps taken', ylab = 'Frequency of the total steps taken')
+```
+
+##mean and median of the number of steps taken each day 
+```{r echo=TRUE}
+day_mean<-summarize(day_hist,mean(steps))
+day_mean<-day_mean[complete.cases(day_mean),]
+names(day_mean)<-c('dates','mean_steps_taken')
+```
+
+1. Mean Per day
+```{r echo= TRUE}
+day_mean
+barplot(day_mean$mean_steps_taken,names= day_mean$dates, xlab = "Days", ylab="mean steps taken",main = "Mean of the total steps taken")
+```
+
+2. Median Per day
+```{r echo = TRUE}
+day_median<-summarize(day_hist,median(steps))
+day_median
+```
+
+3. mean and median of the total steps taken in the entire interval
+```{r echo=TRUE}
+paste("The mean of the steps taken is :",round(mean(day_total_hist$total_steps_taken,na.rm= TRUE)))
+paste("The median of the steps taken is :",round(median(day_total_hist$total_steps_taken,na.rm= TRUE)))
+```
+
+##Time series plot for the average number of steps taken the entire day:
+```{r echo = TRUE}
+interval_steps<-group_by(d,interval)
+interval_total_steps<-summarise(interval_steps,sum(steps))
+names(interval_total_steps)<-c('interval','total_steps_taken_each_interval')
+plot(interval_total_steps$interval,interval_total_steps$total_steps_taken_each_interval,type = "l",xlab = "Intervals", ylab = "Total steps taken each interval across all days", main = "Time series plot for the steps taken across all days")
+```
+
+##The 5 minute interval containing maximum number of average taken steps:
+```{r echo = TRUE}
+interval_average_steps<-summarise(interval_steps,mean(steps,na.rm = TRUE))
+names(interval_average_steps)<-c('interval','average_steps_per_interval')
+interval_average_steps<-interval_average_steps[complete.cases(interval_average_steps),]
+max_steps_interval<-max(interval_average_steps$average_steps_per_interval,na.rm= TRUE)
+
+paste("maximum of the average steps taken for a interval is:",max_steps_interval," The same occurs at: ",interval_average_steps[interval_average_steps$average_steps_per_interval==max_steps_interval,]$interval)
+```
 
 
-## Loading and preprocessing the data
+##Code to describe to impute the missing data
+```{r echo = TRUE}
+paste("Total number of values in the dataset containing the NA values is",nrow(data[is.na(data$steps),]))
+paste("percentage of the values in the dataset containing the NA values is",(nrow(data[is.na(data$steps),])/nrow(data))*100,"%")
+```
 
+1. adding the missing values with the mean of the steps taken each interval as there are some missing values per day.
+```{r echo = TRUE}
+d1<-tbl_df(data)
+for(i in 1:nrow(d1))
+    {
+    if(is.na(d1[i,]$steps))
+    {
+        d1[i,]$steps<-interval_average_steps[interval_average_steps$interval ==  d1[i,]$interval,]$average_steps_per_interval
+    }
+}
 
+nrow(d1[is.na(d1$steps),])
+```
 
-## What is mean total number of steps taken per day?
+##histogram of the total steps taken after the missing values are imputed
+```{r echo = TRUE}
+day_hist_all<-group_by(d1,date)
+day_total_all_hist<-summarize(day_hist_all,sum(steps))
+names(day_total_all_hist)<-c('dates','total_steps_taken_with_na')
+hist(day_total_hist$total_steps_taken,main = 'Histogram of total steps taken per day',xlab = 'Total Steps taken including NA', ylab = 'Frequency of the total steps taken')
+```
 
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+##Average number of steps taken per weekday and weekend. 
+```{r echo = TRUE,warnings = FALSE}
+d_weekday<-mutate(d1,weekend = (weekdays(d1$date) == 'Sunday' | weekdays(d1$date) == 'Saturday'))
+for(i in 1:nrow(d1))
+{
+    if(d_weekday[i,]$weekend)
+    {
+        d_weekday[i,]$weekend = "Weekend"
+    }
+    else
+        d_weekday[i,]$weekend = "Weekday"
+}
+d_interval_steps<-group_by(d_weekday,interval, weekend)
+d_interval_average_steps<-summarise(d_interval_steps,mean(steps,na.rm= TRUE))
+names(d_interval_average_steps)<-c('interval','Weekend_flag','Mean_steps')
+library(ggplot2)
+ggplot(d_interval_average_steps,aes (interval,Mean_steps,color=Weekend_flag))+geom_line() +facet_grid(.~Weekend_flag)+xlab("Interval")+ylab("Average steps taken")+ ggtitle("Comparison of the activity performance")
+```
