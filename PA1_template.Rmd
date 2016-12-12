@@ -20,7 +20,7 @@ data_nona<-data[!is.na(data),]
 
 ##Histogram of the total number of steps taken each day
 1. calculating the sum of the steps per day
-```{r echo=TRUE,warnings=FALSE}
+```{r echo=TRUE,message=FALSE, warning= FALSE}
 library(dplyr)
 d<- tbl_df(data_nona)
 day_hist<-group_by(d,date)
@@ -102,7 +102,7 @@ hist(day_total_hist$total_steps_taken,main = 'Histogram of total steps taken per
 ```
 
 ##Average number of steps taken per weekday and weekend. 
-```{r echo = TRUE,warnings = FALSE}
+```{r echo = TRUE,message = FALSE, warning= FALSE}
 d_weekday<-mutate(d1,weekend = (weekdays(d1$date) == 'Sunday' | weekdays(d1$date) == 'Saturday'))
 for(i in 1:nrow(d1))
 {

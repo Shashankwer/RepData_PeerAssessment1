@@ -20,30 +20,6 @@ data_nona<-data[!is.na(data),]
 
 ```r
 library(dplyr)
-```
-
-```
-## Warning: package 'dplyr' was built under R version 3.2.5
-```
-
-```
-## 
-## Attaching package: 'dplyr'
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-```
-
-```
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
 d<- tbl_df(data_nona)
 day_hist<-group_by(d,date)
 day_total_hist<-summarize(day_hist,sum(steps))
@@ -224,13 +200,6 @@ d_interval_steps<-group_by(d_weekday,interval, weekend)
 d_interval_average_steps<-summarise(d_interval_steps,mean(steps,na.rm= TRUE))
 names(d_interval_average_steps)<-c('interval','Weekend_flag','Mean_steps')
 library(ggplot2)
-```
-
-```
-## Warning: package 'ggplot2' was built under R version 3.2.4
-```
-
-```r
 ggplot(d_interval_average_steps,aes (interval,Mean_steps,color=Weekend_flag))+geom_line() +facet_grid(.~Weekend_flag)+xlab("Interval")+ylab("Average steps taken")+ ggtitle("Comparison of the activity performance")
 ```
 
